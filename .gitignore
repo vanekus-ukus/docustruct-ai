@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+*.pyc
+*.pyo
+*.pyd
+*.db
+data/
+run_data/
+test_data/
+examples/generated/

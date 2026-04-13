@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Проверка документа {{ document.id }}</title>
+    <style>
+      :root {
+        --bg: #f4efe5;
+        --card: #fffdf9;
+        --ink: #21201d;
+        --accent: #9b3d2e;
+        --muted: #666057;
+        --line: #d9cfc0;
+      }
+      body {
+        margin: 0;
+        font-family: "Georgia", "Times New Roman", serif;
+        background: radial-gradient(circle at top left, #fff7e8, var(--bg));
+        color: var(--ink);
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 24px;
+        padding: 24px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 16px 40px rgba(78, 46, 20, 0.08);
+      }
+      h1, h2, h3 {
+        margin-top: 0;
+      }
+      .page {
+        margin-bottom: 24px;
+      }
+      img {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+      }
+      .task {
+        border-top: 1px solid var(--line);
+        padding-top: 16px;
+        margin-top: 16px;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      textarea, input, select {
+        width: 100%;
+        padding: 10px 12px;
+        margin-top: 8px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        box-sizing: border-box;
+      }
+      button {
+        margin-top: 12px;
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--accent);
+        color: white;
+        cursor: pointer;
+      }
+      pre {
+        white-space: pre-wrap;
+        background: #f8f4ed;
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+      }
+      @media (max-width: 960px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <section class="card">
+        <h1>Ручная проверка документа</h1>
+        <p class="meta">
+          Документ: {{ document.filename }} · Тип: {{ document.document_type }} · Статус маршрутизации: {{ document.routing_state }}
+        </p>
+        {% for page in pages %}
+        <div class="page">
+          <h2>Страница {{ page.page_number }}</h2>
+          <img src="{{ page.image_url }}" alt="Страница {{ page.page_number }}" />
+          <h3>Сырой OCR текст</h3>
+          <pre>{{ page.ocr_text }}</pre>
+        </div>
+        {% endfor %}
+      </section>
+      <aside class="card">
+        <h2>Очередь спорных полей</h2>
+        {% if not tasks %}
+          <p>Для этого документа нет открытых задач на ручную проверку.</p>
+        {% endif %}
+        {% for task in tasks %}
+        <div class="task">
+          <h3>{{ task.field_name or "Документ" }}</h3>
+          <p class="meta">Причина: {{ task.reason }} · Статус: {{ task.status }}</p>
+          <p><strong>Кандидат:</strong> {{ task.candidate_value }}</p>
+          {% if task.evidence %}
+          <p><strong>Evidence:</strong> {{ task.evidence.evidence_text }}</p>
+          <p class="meta">
+            Страница {{ task.evidence.page }},
+            bbox={{ task.evidence.bbox }},
+            источник={{ task.evidence.source_engine }}
+          </p>
+          {% endif %}
+          {% if task.validation_issues %}
+          <p><strong>Валидация:</strong></p>
+          <ul>
+            {% for issue in task.validation_issues %}
+            <li>{{ issue.rule_name }}: {{ issue.message }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          <form action="/review/tasks/{{ task.id }}/submit" method="post" onsubmit="return submitTask(event, {{ task.id }})">
+            <label>Решение</label>
+            <select name="decision">
+              <option value="accept">Принять</option>
+              <option value="edit">Исправить</option>
+              <option value="unsupported">Неподдерживаемо</option>
+            </select>
+            <label>Финальное значение</label>
+            <input name="final_value" placeholder="Оставьте пустым для accept/unsupported" />
+            <label>Reviewer</label>
+            <input name="reviewer" placeholder="qa@example.com" />
+            <label>Комментарий</label>
+            <textarea name="comment" rows="3" placeholder="Краткое объяснение решения"></textarea>
+            <button type="submit">Сохранить решение</button>
+          </form>
+          <div id="task-status-{{ task.id }}" class="meta"></div>
+        </div>
+        {% endfor %}
+      </aside>
+    </div>
+    <script>
+      async function submitTask(event, taskId) {
+        event.preventDefault();
+        const form = event.target;
+        const payload = {
+          decision: form.decision.value,
+          final_value: form.final_value.value || null,
+          reviewer: form.reviewer.value || null,
+          comment: form.comment.value || null
+        };
+        const response = await fetch(`/review/tasks/${taskId}/submit`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload)
+        });
+        const status = document.getElementById(`task-status-${taskId}`);
+        if (response.ok) {
+          status.textContent = "Решение сохранено.";
+          form.reset();
+        } else {
+          const data = await response.json();
+          status.textContent = `Ошибка: ${data.detail || "не удалось сохранить решение"}`;
+        }
+        return false;
+      }
+    </script>
+  </body>
+</html>

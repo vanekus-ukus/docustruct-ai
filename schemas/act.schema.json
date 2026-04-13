@@ -1,0 +1,12 @@
+{
+  "title": "ActSchema",
+  "type": "object",
+  "properties": {
+    "act_number": {"type": ["string", "null"]},
+    "act_date": {"type": ["string", "null"], "format": "date"},
+    "seller_name": {"type": ["string", "null"]},
+    "buyer_name": {"type": ["string", "null"]},
+    "total": {"type": ["number", "null"]},
+    "currency": {"type": ["string", "null"]}
+  }
+}

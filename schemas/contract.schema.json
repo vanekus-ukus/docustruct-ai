@@ -1,0 +1,12 @@
+{
+  "title": "ContractSchema",
+  "type": "object",
+  "properties": {
+    "contract_number": {"type": ["string", "null"]},
+    "contract_date": {"type": ["string", "null"], "format": "date"},
+    "party_a": {"type": ["string", "null"]},
+    "party_b": {"type": ["string", "null"]},
+    "total_amount": {"type": ["number", "null"]},
+    "currency": {"type": ["string", "null"]}
+  }
+}

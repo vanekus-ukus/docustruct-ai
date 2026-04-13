@@ -1,0 +1,27 @@
+{
+  "title": "InvoiceSchema",
+  "type": "object",
+  "properties": {
+    "supplier_name": {"type": ["string", "null"]},
+    "buyer_name": {"type": ["string", "null"]},
+    "invoice_number": {"type": ["string", "null"]},
+    "invoice_date": {"type": ["string", "null"], "format": "date"},
+    "due_date": {"type": ["string", "null"], "format": "date"},
+    "currency": {"type": ["string", "null"]},
+    "subtotal": {"type": ["number", "null"]},
+    "tax": {"type": ["number", "null"]},
+    "total": {"type": ["number", "null"]},
+    "line_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {"type": ["string", "null"]},
+          "quantity": {"type": ["number", "null"]},
+          "unit_price": {"type": ["number", "null"]},
+          "total": {"type": ["number", "null"]}
+        }
+      }
+    }
+  }
+}

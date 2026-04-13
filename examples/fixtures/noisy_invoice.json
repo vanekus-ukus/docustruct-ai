@@ -1,0 +1,15 @@
+{
+  "document_type": "invoice",
+  "title": "Шумный счёт",
+  "seller": "ООО Альфа Поставка",
+  "buyer": "ООО Бета Маркет",
+  "invoice_number": "INV-2024-ERR",
+  "invoice_date": "17/05/2024",
+  "currency": "RUB",
+  "line_items": [
+    {"description": "Сервис", "quantity": 1, "unit_price": 999.99, "total": 999.99}
+  ],
+  "subtotal": 999.99,
+  "tax": 1.00,
+  "total": 1500.00
+}
