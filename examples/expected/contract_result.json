@@ -1,0 +1,12 @@
+{
+  "document_type": "contract",
+  "payload": {
+    "contract_number": "CTR-2024-042",
+    "contract_date": "2024-04-01",
+    "party_a": "ООО Альфа Поставка",
+    "party_b": "ООО Бета Маркет",
+    "total_amount": 120000.0,
+    "currency": "RUB"
+  },
+  "route": "accepted"
+}

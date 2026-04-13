@@ -55,6 +55,8 @@ def normalize_currency(text: str | None) -> str | None:
 def normalize_date(value: str | None) -> str | None:
     if not value:
         return None
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value.strip()):
+        return value.strip()
     try:
         parsed = parser.parse(value, dayfirst=True, fuzzy=True)
         return parsed.date().isoformat()
