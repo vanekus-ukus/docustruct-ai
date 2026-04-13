@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: install dev api worker test lint demo-fixtures db-upgrade db-revision
+.PHONY: install dev api worker test ci lint demo-fixtures db-upgrade db-revision
 
 install:
 	$(PYTHON) -m pip install -e .[dev]
@@ -16,6 +16,11 @@ worker:
 
 test:
 	pytest -q
+
+ci:
+	python -m compileall src tests scripts
+	pytest -q
+	DATABASE_URL=sqlite:///./ci.db alembic upgrade head
 
 demo-fixtures:
 	$(PYTHON) scripts/generate_demo_documents.py
