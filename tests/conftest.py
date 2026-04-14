@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Generator
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -17,22 +18,24 @@ from docustruct_ai.db.session import get_db
 from docustruct_ai.main import app
 
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_docustruct.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-@pytest.fixture(autouse=True)
-def setup_database() -> Generator[None, None, None]:
-    Base.metadata.drop_all(bind=engine)
+@pytest.fixture()
+def db_engine(tmp_path: Path):
+    db_path = tmp_path / "test_docustruct.db"
+    engine = create_engine(
+        f"sqlite:///{db_path}",
+        connect_args={"check_same_thread": False},
+    )
     Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
+    try:
+        yield engine
+    finally:
+        engine.dispose()
 
 
 @pytest.fixture()
-def db_session() -> Generator[Session, None, None]:
-    session = TestingSessionLocal()
+def db_session(db_engine) -> Generator[Session, None, None]:
+    testing_session_local = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
+    session = testing_session_local()
     try:
         yield session
     finally:
@@ -40,9 +43,11 @@ def db_session() -> Generator[Session, None, None]:
 
 
 @pytest.fixture()
-def client() -> Generator[TestClient, None, None]:
+def client(db_engine) -> Generator[TestClient, None, None]:
+    testing_session_local = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
+
     def override_get_db() -> Generator[Session, None, None]:
-        session = TestingSessionLocal()
+        session = testing_session_local()
         try:
             yield session
         finally:

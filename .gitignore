@@ -22,5 +22,9 @@ smoke.db
 smoke_api.db
 tmp_review_check.db
 alembic_check.db
+benchmark.db
+benchmark_cli_smoke.db
 examples/generated/
 examples/generated_api/
+benchmark_artifacts/
+benchmark_cli_artifacts/

@@ -7,6 +7,10 @@
 - `act`
 - `contract`
 
+Дополнительно уже реализовано:
+- conditional `VLM fallback` path для сложных документов;
+- offline benchmark CLI с сохранением evaluation artifacts.
+
 ## Локальный запуск
 
 ```bash
@@ -34,6 +38,7 @@ make smoke-compose
 - OpenAPI: `http://localhost:8000/docs`
 - Тесты: `./.venv/bin/python -m pytest -q`
 - CI smoke: `PATH=./.venv/bin:$PATH make ci`
+- Benchmark smoke: `PATH=./.venv/bin:$PATH make benchmark-smoke`
 
 ## Что сейчас проверено
 
@@ -43,6 +48,8 @@ make smoke-compose
 - сохранение результатов и review decisions;
 - queued async path с сохранением `worker_task_id`;
 - compose stack с `PostgreSQL + Redis + api + worker`;
+- conditional VLM fallback с детерминированным local stub path;
+- benchmark CLI для offline evaluation;
 - Alembic migration smoke;
 - GitHub Actions для тестов и smoke scripts.
 
@@ -52,6 +59,7 @@ make smoke-compose
 ./.venv/bin/python scripts/smoke_pipeline.py
 ./.venv/bin/python scripts/smoke_api_flow.py
 ./.venv/bin/python scripts/smoke_async_flow.py
+./.venv/bin/python scripts/run_benchmark.py --input examples/evaluation/invoice_benchmark.json --name invoice-local-benchmark --document-type invoice
 ```
 
 Первый скрипт проверяет pipeline по fixture-документам.
@@ -65,6 +73,11 @@ make smoke-compose
 - upload в async mode
 - сохранение `job_id` и `worker_task_id`
 - корректный финальный status/result после worker execution
+
+Четвёртая команда запускает offline benchmark:
+- читает evaluation items из JSON
+- сохраняет summary в JSON и Markdown
+- пишет запись `evaluation_runs` в БД
 
 ## Структура
 

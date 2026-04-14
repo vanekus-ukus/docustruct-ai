@@ -14,4 +14,9 @@ class StubVLMBackend(VLMBackend):
         target_schema: dict[str, Any],
         instructions: str,
     ) -> dict[str, Any] | None:
+        # Deterministic local fallback for tests/demo: optional candidate can be injected
+        # via document metadata without coupling business logic to a remote provider.
+        candidate = document.metadata_json.get("vlm_candidate")
+        if isinstance(candidate, dict):
+            return candidate
         return None

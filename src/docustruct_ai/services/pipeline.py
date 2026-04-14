@@ -94,17 +94,64 @@ class DocumentPipelineService:
             )
 
             schema = self.registry.get(document.document_type)
-            vlm_candidate = self.vlm_backend.extract_candidate(
-                document=document,
-                document_type=document.document_type,
-                target_schema=schema.json_schema(),
-                instructions=schema.instructions,
+            document_quality_score = self._document_quality(parsed_document, ocr_metadata)
+            candidate_payload = self.extractor.extract(
+                document.document_type, parsed_document, ocr_spans, vlm_candidate=None
             )
-            candidate_payload = self.extractor.extract(document.document_type, parsed_document, ocr_spans, vlm_candidate)
             normalized_payload = schema.model.model_validate(candidate_payload).model_dump()
 
+            vlm_trigger_reasons = self._vlm_trigger_reasons(schema, normalized_payload, document_quality_score)
+            vlm_candidate = None
+            vlm_status = "skipped"
+            if self.settings.enable_vlm_fallback and vlm_trigger_reasons:
+                vlm_candidate = self.vlm_backend.extract_candidate(
+                    document=document,
+                    document_type=document.document_type,
+                    target_schema=schema.json_schema(),
+                    instructions=schema.instructions,
+                )
+                vlm_status = "used" if vlm_candidate else "no_candidate"
+                self._record_engine_run(
+                    db,
+                    document.id,
+                    job_id,
+                    engine_type="vlm",
+                    engine_name=type(self.vlm_backend).__name__,
+                    status=vlm_status,
+                    input_payload={
+                        "document_type": document.document_type,
+                        "trigger_reasons": vlm_trigger_reasons,
+                    },
+                    output_payload={"candidate": vlm_candidate or {}},
+                    metrics_json={
+                        "triggered": True,
+                        "candidate_received": bool(vlm_candidate),
+                        "document_quality_score": document_quality_score,
+                    },
+                )
+                if vlm_candidate:
+                    candidate_payload = self.extractor.extract(
+                        document.document_type, parsed_document, ocr_spans, vlm_candidate
+                    )
+                    normalized_payload = schema.model.model_validate(candidate_payload).model_dump()
+            else:
+                self._record_engine_run(
+                    db,
+                    document.id,
+                    job_id,
+                    engine_type="vlm",
+                    engine_name=type(self.vlm_backend).__name__,
+                    status=vlm_status,
+                    input_payload={"document_type": document.document_type},
+                    output_payload={},
+                    metrics_json={
+                        "triggered": False,
+                        "candidate_received": False,
+                        "document_quality_score": document_quality_score,
+                    },
+                )
+
             validation_issues = self.validation_service.validate(document.document_type, normalized_payload)
-            document_quality_score = self._document_quality(parsed_document, ocr_metadata)
             field_results = self._build_field_results(schema, normalized_payload, ocr_spans, validation_issues, document_quality_score)
 
             doc_result = DocumentResult(
@@ -117,7 +164,11 @@ class DocumentPipelineService:
                 confidence=0.0,
                 route="needs_review",
                 routing_reasons=[],
-                metadata={"quality_score": document_quality_score},
+                metadata={
+                    "quality_score": document_quality_score,
+                    "vlm_fallback_used": bool(vlm_candidate),
+                    "vlm_trigger_reasons": vlm_trigger_reasons,
+                },
             )
             doc_result.confidence = self.confidence_service.score_document(field_results, validation_issues)
             doc_result.route, doc_result.routing_reasons = self.routing_service.route_document(doc_result)
@@ -346,6 +397,7 @@ class DocumentPipelineService:
         job_id: str | None,
         engine_type: str,
         engine_name: str,
+        status: str = "ok",
         engine_version: str | None = None,
         input_payload: dict[str, Any] | None = None,
         output_payload: dict[str, Any] | None = None,
@@ -358,7 +410,7 @@ class DocumentPipelineService:
                 engine_type=engine_type,
                 engine_name=engine_name,
                 engine_version=engine_version,
-                status="ok",
+                status=status,
                 input_payload=input_payload or {},
                 output_payload=output_payload or {},
                 metrics_json=metrics_json or {},
@@ -406,6 +458,24 @@ class DocumentPipelineService:
         structure_score = min(1.0, region_count / (8 * pages))
         ocr_score = float(ocr_metadata.get("coverage_score", 0.0))
         return round((0.45 * structure_score) + (0.55 * ocr_score), 4)
+
+    def _vlm_trigger_reasons(
+        self,
+        schema: Any,
+        payload: dict[str, Any],
+        document_quality_score: float,
+    ) -> list[str]:
+        reasons: list[str] = []
+        missing_required = [
+            field.name
+            for field in schema.fields
+            if field.required and payload.get(field.name) in (None, "", [])
+        ]
+        if len(missing_required) >= self.settings.vlm_fallback_missing_required_threshold:
+            reasons.append("missing_required_fields")
+        if document_quality_score < self.settings.vlm_fallback_quality_threshold:
+            reasons.append("low_document_quality")
+        return reasons
 
     def _value_type(self, value: Any) -> str:
         if isinstance(value, list):

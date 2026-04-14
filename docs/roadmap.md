@@ -15,7 +15,7 @@
 ## V2
 
 - полноценный multi-document-type registry;
-- VLM fallback adapter;
+- provider-backed VLM fallback adapter;
 - улучшенный parsing photographed documents;
 - table structure recovery и line item reconstruction;
 - benchmark scripts;

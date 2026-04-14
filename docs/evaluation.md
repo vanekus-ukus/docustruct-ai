@@ -61,6 +61,22 @@
 - агрегаты по полям;
 - список типовых failure modes.
 
+## CLI benchmark
+
+Для offline benchmark без HTTP-слоя можно использовать:
+
+```bash
+python scripts/run_benchmark.py \
+  --input examples/evaluation/invoice_benchmark.json \
+  --name invoice-local-benchmark \
+  --document-type invoice
+```
+
+CLI:
+- читает JSON-массив evaluation items;
+- создаёт запись в `evaluation_runs`;
+- сохраняет `summary.json` и `summary.md` в artifact storage.
+
 ## Использование результатов
 
 Evaluation предназначен не только для отчётности, но и для:

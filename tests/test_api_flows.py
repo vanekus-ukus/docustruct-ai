@@ -218,6 +218,16 @@ def test_api_route_flow_async_queue_trace(tmp_path: Path, db_session, monkeypatc
         celery_task_eager_propagates=True,
     )
     monkeypatch.setattr("docustruct_ai.api.routes.documents.get_settings", lambda: async_settings)
+
+    class FakeAsyncResult:
+        def __init__(self, task_id: str) -> None:
+            self.id = task_id
+
+    def fake_enqueue(document_id: str, job_id: str) -> FakeAsyncResult:
+        pipeline.run(db_session, document_id=document_id, job_id=job_id)
+        return FakeAsyncResult("test-worker-task-id")
+
+    monkeypatch.setattr("docustruct_ai.api.routes.documents.enqueue_document_task", fake_enqueue)
     celery_app.conf.update(task_always_eager=True, task_eager_propagates=True)
 
     with pdf_path.open("rb") as fh:

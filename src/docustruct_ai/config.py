@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     templates_dir: Path = Field(default=Path("./src/docustruct_ai/templates"))
 
     execution_mode: str = "inline"
+    enable_vlm_fallback: bool = True
+    vlm_fallback_quality_threshold: float = 0.72
+    vlm_fallback_missing_required_threshold: int = 1
     accept_threshold: float = 0.85
     review_threshold: float = 0.55
     reject_threshold: float = 0.25
