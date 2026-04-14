@@ -35,3 +35,6 @@ jobs:
 
       - name: Build image
         run: docker build -t docustruct-ai:ci .
+
+      - name: Compose smoke
+        run: ./scripts/smoke_compose.sh

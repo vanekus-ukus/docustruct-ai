@@ -22,6 +22,12 @@ uvicorn docustruct_ai.main:app --reload
 docker compose up --build
 ```
 
+Для быстрой проверки containerized стека:
+
+```bash
+make smoke-compose
+```
+
 ## Полезное
 
 - API: `http://localhost:8000`
@@ -36,6 +42,7 @@ docker compose up --build
 - review flow для шумного invoice;
 - сохранение результатов и review decisions;
 - queued async path с сохранением `worker_task_id`;
+- compose stack с `PostgreSQL + Redis + api + worker`;
 - Alembic migration smoke;
 - GitHub Actions для тестов и smoke scripts.
 

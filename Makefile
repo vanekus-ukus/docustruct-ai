@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: install dev api worker test ci lint demo-fixtures db-upgrade db-revision
+.PHONY: install dev api worker test ci lint demo-fixtures db-upgrade db-revision smoke-compose
 
 install:
 	$(PYTHON) -m pip install -e .[dev]
@@ -13,6 +13,9 @@ api:
 
 worker:
 	celery -A docustruct_ai.services.worker.celery_app worker --loglevel=INFO
+
+smoke-compose:
+	./scripts/smoke_compose.sh
 
 test:
 	pytest -q
