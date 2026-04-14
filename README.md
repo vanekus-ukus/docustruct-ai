@@ -9,6 +9,7 @@
 
 Дополнительно уже реализовано:
 - conditional `VLM fallback` path для сложных документов;
+- provider-backed VLM adapter layer с local mock provider;
 - offline benchmark CLI с сохранением evaluation artifacts.
 
 ## Локальный запуск
@@ -39,6 +40,7 @@ make smoke-compose
 - Тесты: `./.venv/bin/python -m pytest -q`
 - CI smoke: `PATH=./.venv/bin:$PATH make ci`
 - Benchmark smoke: `PATH=./.venv/bin:$PATH make benchmark-smoke`
+- Compare benchmark smoke: `PATH=./.venv/bin:$PATH make compare-benchmarks-smoke`
 
 ## Что сейчас проверено
 
@@ -49,7 +51,9 @@ make smoke-compose
 - queued async path с сохранением `worker_task_id`;
 - compose stack с `PostgreSQL + Redis + api + worker`;
 - conditional VLM fallback с детерминированным local stub path;
+- provider-backed VLM adapter layer для будущих внешних backends;
 - benchmark CLI для offline evaluation;
+- CLI для сравнения benchmark summary между двумя режимами/движками;
 - Alembic migration smoke;
 - GitHub Actions для тестов и smoke scripts.
 

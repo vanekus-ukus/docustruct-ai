@@ -28,7 +28,10 @@
 
 ## `vlm`
 
-Точка расширения под vision-language extraction backends. В MVP поставляется stub-адаптер и контракт для V2.
+Точка расширения под vision-language extraction backends. В текущем состоянии есть:
+- `stub` backend;
+- provider-backed backend;
+- mock provider для локального deterministic flow без внешнего API.
 
 ## `extraction`
 

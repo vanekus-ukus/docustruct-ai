@@ -24,6 +24,7 @@ tmp_review_check.db
 alembic_check.db
 benchmark.db
 benchmark_cli_smoke.db
+benchmark_compare_artifacts/
 examples/generated/
 examples/generated_api/
 benchmark_artifacts/

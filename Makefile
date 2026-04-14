@@ -1,6 +1,6 @@
 PYTHON ?= python3
 
-.PHONY: install dev api worker test ci lint demo-fixtures db-upgrade db-revision smoke-compose benchmark-smoke
+.PHONY: install dev api worker test ci lint demo-fixtures db-upgrade db-revision smoke-compose benchmark-smoke compare-benchmarks-smoke
 
 install:
 	$(PYTHON) -m pip install -e .[dev]
@@ -19,6 +19,9 @@ smoke-compose:
 
 benchmark-smoke:
 	python scripts/run_benchmark.py --input examples/evaluation/invoice_benchmark.json --name invoice-benchmark-smoke --document-type invoice --database-url sqlite:///./benchmark.db --artifacts-root ./benchmark_artifacts
+
+compare-benchmarks-smoke:
+	python scripts/compare_benchmarks.py --baseline benchmark_artifacts/evaluation/invoice-benchmark-smoke/summary.json --candidate benchmark_artifacts/evaluation/invoice-benchmark-smoke/summary.json
 
 test:
 	pytest -q

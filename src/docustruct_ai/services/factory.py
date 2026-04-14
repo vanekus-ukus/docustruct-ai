@@ -17,6 +17,8 @@ from docustruct_ai.services.documents import DocumentQueryService
 from docustruct_ai.services.pipeline import DocumentPipelineService
 from docustruct_ai.storage.adapters.local import LocalFileStorage
 from docustruct_ai.validation.service import ValidationService
+from docustruct_ai.vlm.provider_backend import ProviderVLMBackend
+from docustruct_ai.vlm.providers import MockVLMProvider
 from docustruct_ai.vlm.stub import StubVLMBackend
 
 
@@ -48,7 +50,7 @@ def get_pipeline_service() -> DocumentPipelineService:
         artifact_storage=get_artifact_storage(),
         parser=HeuristicParser(),
         ocr_backend=PyMuPDFTextOcrAdapter(),
-        vlm_backend=StubVLMBackend(),
+        vlm_backend=get_vlm_backend(),
         extractor=ExtractionOrchestrator(registry),
         registry=registry,
         grounding_service=GroundingService(),
@@ -71,3 +73,15 @@ def get_query_service() -> DocumentQueryService:
 @lru_cache(maxsize=1)
 def get_evaluation_service() -> EvaluationService:
     return EvaluationService(get_registry(), get_artifact_storage())
+
+
+@lru_cache(maxsize=1)
+def get_vlm_backend():
+    settings = get_settings()
+    if settings.vlm_backend == "provider":
+        provider = MockVLMProvider()
+        return ProviderVLMBackend(
+            provider=provider,
+            backend_name=f"{settings.vlm_provider}_provider_vlm",
+        )
+    return StubVLMBackend()

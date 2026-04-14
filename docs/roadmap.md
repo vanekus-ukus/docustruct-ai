@@ -16,6 +16,7 @@
 
 - полноценный multi-document-type registry;
 - provider-backed VLM fallback adapter;
+- реальный remote/provider integration поверх mock provider contract;
 - улучшенный parsing photographed documents;
 - table structure recovery и line item reconstruction;
 - benchmark scripts;

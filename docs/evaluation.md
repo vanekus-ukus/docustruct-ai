@@ -77,6 +77,21 @@ CLI:
 - создаёт запись в `evaluation_runs`;
 - сохраняет `summary.json` и `summary.md` в artifact storage.
 
+## Сравнение двух прогонов
+
+Для сравнения baseline и candidate summary можно использовать:
+
+```bash
+python scripts/compare_benchmarks.py \
+  --baseline benchmark_artifacts/evaluation/ocr-only/summary.json \
+  --candidate benchmark_artifacts/evaluation/ocr-plus-vlm/summary.json
+```
+
+Скрипт возвращает:
+- delta по `overall_accuracy`;
+- delta по каждому полю;
+- удобную основу для `ocr_only vs ocr_plus_vlm` анализа.
+
 ## Использование результатов
 
 Evaluation предназначен не только для отчётности, но и для:

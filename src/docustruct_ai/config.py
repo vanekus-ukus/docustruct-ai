@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     enable_vlm_fallback: bool = True
     vlm_fallback_quality_threshold: float = 0.72
     vlm_fallback_missing_required_threshold: int = 1
+    vlm_backend: str = "stub"
+    vlm_provider: str = "mock"
     accept_threshold: float = 0.85
     review_threshold: float = 0.55
     reject_threshold: float = 0.25
