@@ -53,3 +53,6 @@ jobs:
 
       - name: API flow smoke script
         run: python scripts/smoke_api_flow.py
+
+      - name: Async flow smoke script
+        run: python scripts/smoke_async_flow.py

@@ -32,9 +32,12 @@ curl -X POST "http://localhost:8000/documents/upload" \
 {
   "document_id": "8bd841e3-0f32-4272-afdb-b070242e3114",
   "job_id": "4b68c4cf-29b5-48c9-8201-cb953bc39c7f",
+  "worker_task_id": "54df42fd-c706-41d5-9236-0641c06253de",
   "status": "queued"
 }
 ```
+
+Если `EXECUTION_MODE=inline`, сервис возвращает тот же контракт, но со статусом `completed` и `worker_task_id = null`.
 
 ## `GET /documents/{id}`
 
@@ -48,6 +51,19 @@ curl -X POST "http://localhost:8000/documents/upload" \
 ## `GET /documents/{id}/status`
 
 Возвращает текущий статус job/pipeline и краткую диагностику.
+
+### Основные поля ответа
+
+- `document_id`
+- `status`
+- `routing_state`
+- `job_id`
+- `worker_task_id`
+- `latest_job_status`
+- `error_message`
+- `started_at`
+- `finished_at`
+- `confidence_score`
 
 ## `GET /documents/{id}/result`
 

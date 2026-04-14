@@ -31,6 +31,7 @@ from docustruct_ai.review.service import ReviewService
 from docustruct_ai.routing.service import RoutingService
 from docustruct_ai.services.documents import DocumentQueryService
 from docustruct_ai.services.pipeline import DocumentPipelineService
+from docustruct_ai.services.worker import celery_app
 from docustruct_ai.storage.adapters.local import LocalFileStorage
 from docustruct_ai.validation.service import ValidationService
 from docustruct_ai.vlm.stub import StubVLMBackend
@@ -148,6 +149,8 @@ def test_api_route_flow_upload_to_result(tmp_path: Path, db_session) -> None:
     assert document_response.document_type == "invoice"
     assert document_response.routing_state == "accepted"
     assert status_response.status == "processed"
+    assert status_response.job_id == upload_response.job_id
+    assert status_response.latest_job_status == "completed"
     assert result_response.route == "accepted"
     assert result_response.payload["invoice_number"] == payload["invoice_number"]
     assert result_response.payload["supplier_name"] == payload["seller"]
@@ -199,3 +202,41 @@ def test_api_route_flow_review_submit(tmp_path: Path, db_session) -> None:
     assert refreshed.status == "reviewed"
     assert refreshed.routing_state == "accepted"
     assert result_response.payload["invoice_number"] == "INV-2024-ERR"
+
+
+def test_api_route_flow_async_queue_trace(tmp_path: Path, db_session, monkeypatch) -> None:
+    payload = json.loads(Path("examples/fixtures/invoice_demo.json").read_text(encoding="utf-8"))
+    pdf_path = tmp_path / "invoice_demo_async.pdf"
+    _render_fixture_pdf(payload, pdf_path)
+    ingestion, pipeline, _, query = _build_services(tmp_path)
+    async_settings = Settings(
+        database_url="sqlite:///./ignored.db",
+        storage_root=tmp_path / "storage",
+        artifacts_root=tmp_path / "artifacts",
+        execution_mode="async",
+        celery_task_always_eager=True,
+        celery_task_eager_propagates=True,
+    )
+    monkeypatch.setattr("docustruct_ai.api.routes.documents.get_settings", lambda: async_settings)
+    celery_app.conf.update(task_always_eager=True, task_eager_propagates=True)
+
+    with pdf_path.open("rb") as fh:
+        upload = UploadFile(file=fh, filename=pdf_path.name)
+        upload_response = upload_document(
+            file=upload,
+            document_type="invoice",
+            external_id="api-async-invoice-001",
+            db=db_session,
+            ingestion_service=ingestion,
+            pipeline_service=pipeline,
+        )
+
+    status_response = get_document_status(upload_response.document_id, db=db_session, query_service=query)
+    result_response = get_document_result(upload_response.document_id, db=db_session, query_service=query)
+
+    assert upload_response.status == "queued"
+    assert upload_response.worker_task_id is not None
+    assert status_response.worker_task_id == upload_response.worker_task_id
+    assert status_response.latest_job_status == "completed"
+    assert status_response.status == "processed"
+    assert result_response.route == "accepted"

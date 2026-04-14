@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -69,7 +70,12 @@ class DocumentQueryService:
             "document_id": document.id,
             "status": document.status,
             "routing_state": document.routing_state,
+            "job_id": latest_job.id if latest_job else None,
+            "worker_task_id": latest_job.worker_task_id if latest_job else None,
             "latest_job_status": latest_job.status if latest_job else None,
+            "error_message": latest_job.error_message if latest_job else None,
+            "started_at": self._serialize_datetime(latest_job.started_at) if latest_job else None,
+            "finished_at": self._serialize_datetime(latest_job.finished_at) if latest_job else None,
             "confidence_score": document.confidence_score,
         }
 
@@ -225,3 +231,8 @@ class DocumentQueryService:
             "message": issue.message,
             "details": issue.details_json,
         }
+
+    def _serialize_datetime(self, value: datetime | None) -> str | None:
+        if value is None:
+            return None
+        return value.isoformat()

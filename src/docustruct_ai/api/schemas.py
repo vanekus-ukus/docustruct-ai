@@ -8,6 +8,7 @@ from pydantic import BaseModel
 class UploadResponse(BaseModel):
     document_id: str
     job_id: str
+    worker_task_id: str | None = None
     status: str
 
 
@@ -27,7 +28,12 @@ class DocumentStatusResponse(BaseModel):
     document_id: str
     status: str
     routing_state: str
+    job_id: str | None = None
+    worker_task_id: str | None = None
     latest_job_status: str | None = None
+    error_message: str | None = None
+    started_at: str | None = None
+    finished_at: str | None = None
     confidence_score: float | None = None
 
 

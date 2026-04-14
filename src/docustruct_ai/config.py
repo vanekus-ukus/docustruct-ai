@@ -16,6 +16,8 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./docustruct.db"
     redis_url: str = "redis://localhost:6379/0"
+    celery_task_always_eager: bool = False
+    celery_task_eager_propagates: bool = True
 
     storage_root: Path = Field(default=Path("./data/storage"))
     artifacts_root: Path = Field(default=Path("./data/artifacts"))

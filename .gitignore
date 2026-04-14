@@ -14,6 +14,7 @@ test_data/
 ci_data/
 smoke_data/
 smoke_api_data/
+smoke_async_data/
 tmp_review_storage/
 tmp_review_artifacts/
 ci.db

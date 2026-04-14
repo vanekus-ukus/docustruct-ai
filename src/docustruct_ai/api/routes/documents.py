@@ -20,7 +20,7 @@ from docustruct_ai.services.factory import (
     get_pipeline_service,
     get_query_service,
 )
-from docustruct_ai.services.worker import process_document_task
+from docustruct_ai.services.worker import enqueue_document_task
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 templates = Jinja2Templates(directory=str(get_settings().templates_dir))
@@ -44,11 +44,22 @@ def upload_document(
 
     if get_settings().execution_mode == "inline":
         pipeline_service.run(db, document.id, job.id)
+        db.refresh(job)
         status = "completed"
+        worker_task_id = None
     else:
-        process_document_task.delay(document.id, job.id)
+        task = enqueue_document_task(document.id, job.id)
+        job.worker_task_id = task.id
+        db.commit()
+        db.refresh(job)
         status = "queued"
-    return UploadResponse(document_id=document.id, job_id=job.id, status=status)
+        worker_task_id = task.id
+    return UploadResponse(
+        document_id=document.id,
+        job_id=job.id,
+        worker_task_id=worker_task_id,
+        status=status,
+    )
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)

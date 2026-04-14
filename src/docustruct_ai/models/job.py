@@ -16,6 +16,7 @@ class Job(Base):
     document_id: Mapped[str] = mapped_column(String(36), ForeignKey("documents.id"), index=True)
     job_type: Mapped[str] = mapped_column(String(64), index=True)
     status: Mapped[str] = mapped_column(String(64), index=True, default="queued")
+    worker_task_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

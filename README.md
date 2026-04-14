@@ -35,6 +35,7 @@ docker compose up --build
 - routing в `accepted` и `needs_review`;
 - review flow для шумного invoice;
 - сохранение результатов и review decisions;
+- queued async path с сохранением `worker_task_id`;
 - Alembic migration smoke;
 - GitHub Actions для тестов и smoke scripts.
 
@@ -43,6 +44,7 @@ docker compose up --build
 ```bash
 ./.venv/bin/python scripts/smoke_pipeline.py
 ./.venv/bin/python scripts/smoke_api_flow.py
+./.venv/bin/python scripts/smoke_async_flow.py
 ```
 
 Первый скрипт проверяет pipeline по fixture-документам.
@@ -51,6 +53,11 @@ docker compose up --build
 - upload
 - result
 - review submit
+
+Третий скрипт проверяет queued/eager async path:
+- upload в async mode
+- сохранение `job_id` и `worker_task_id`
+- корректный финальный status/result после worker execution
 
 ## Структура
 
