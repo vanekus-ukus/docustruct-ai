@@ -22,6 +22,7 @@ ci:
 	pytest -q
 	DATABASE_URL=sqlite:///./ci.db alembic upgrade head
 	python scripts/smoke_pipeline.py
+	python scripts/smoke_api_flow.py
 
 demo-fixtures:
 	$(PYTHON) scripts/generate_demo_documents.py

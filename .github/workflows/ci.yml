@@ -50,3 +50,6 @@ jobs:
 
       - name: Pipeline smoke script
         run: python scripts/smoke_pipeline.py
+
+      - name: API flow smoke script
+        run: python scripts/smoke_api_flow.py

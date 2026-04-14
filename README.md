@@ -2,6 +2,11 @@
 
 Минимальный open-source проект для структурной обработки документов.
 
+Сейчас в проекте уже есть рабочий baseline для:
+- `invoice`
+- `act`
+- `contract`
+
 ## Локальный запуск
 
 ```bash
@@ -22,6 +27,30 @@ docker compose up --build
 - API: `http://localhost:8000`
 - OpenAPI: `http://localhost:8000/docs`
 - Тесты: `./.venv/bin/python -m pytest -q`
+- CI smoke: `PATH=./.venv/bin:$PATH make ci`
+
+## Что сейчас проверено
+
+- извлечение `invoice`, `act`, `contract` из synthetic PDF;
+- routing в `accepted` и `needs_review`;
+- review flow для шумного invoice;
+- сохранение результатов и review decisions;
+- Alembic migration smoke;
+- GitHub Actions для тестов и smoke scripts.
+
+## Smoke scripts
+
+```bash
+./.venv/bin/python scripts/smoke_pipeline.py
+./.venv/bin/python scripts/smoke_api_flow.py
+```
+
+Первый скрипт проверяет pipeline по fixture-документам.
+
+Второй скрипт проверяет API-layer flow:
+- upload
+- result
+- review submit
 
 ## Структура
 

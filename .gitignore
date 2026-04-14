@@ -13,10 +13,13 @@ run_data/
 test_data/
 ci_data/
 smoke_data/
+smoke_api_data/
 tmp_review_storage/
 tmp_review_artifacts/
 ci.db
 smoke.db
+smoke_api.db
 tmp_review_check.db
 alembic_check.db
 examples/generated/
+examples/generated_api/
