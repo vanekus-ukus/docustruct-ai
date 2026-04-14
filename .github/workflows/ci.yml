@@ -47,3 +47,6 @@ jobs:
 
       - name: Alembic smoke test
         run: alembic upgrade head
+
+      - name: Pipeline smoke script
+        run: python scripts/smoke_pipeline.py

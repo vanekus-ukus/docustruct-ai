@@ -155,9 +155,15 @@ class DocumentQueryService:
                     "field_name": field.field_name if field else None,
                     "validation_issues": [
                         self._serialize_validation(item)
-                        for item in (field.validation_reports if field else [])
+                        for item in (
+                            field.validation_reports
+                            if field
+                            else [report for report in document.validation_reports if report.scope == "document"]
+                        )
                     ],
                     "evidence": self._serialize_evidence(evidence),
+                    "value_type": field.value_type if field else "document",
+                    "required": field.is_required if field else False,
                 }
             )
 

@@ -21,6 +21,7 @@ ci:
 	python -m compileall src tests scripts
 	pytest -q
 	DATABASE_URL=sqlite:///./ci.db alembic upgrade head
+	python scripts/smoke_pipeline.py
 
 demo-fixtures:
 	$(PYTHON) scripts/generate_demo_documents.py

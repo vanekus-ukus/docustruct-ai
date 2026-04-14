@@ -262,6 +262,22 @@ class DocumentPipelineService:
                     )
                 )
 
+        has_field_review = any(field.route == "needs_review" for field in result.fields)
+        if result.route == "needs_review" and not has_field_review:
+            document_issue_reasons = [
+                issue.message for issue in result.validation_issues if issue.scope == "document"
+            ]
+            review_reason_parts = document_issue_reasons or result.routing_reasons or ["document_review_required"]
+            db.add(
+                ReviewTask(
+                    document_id=document.id,
+                    field_id=None,
+                    status="open",
+                    reason=" | ".join(review_reason_parts),
+                    candidate_value=None,
+                )
+            )
+
         self._record_engine_run(
             db,
             document.id,

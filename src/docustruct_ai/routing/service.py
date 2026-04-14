@@ -10,11 +10,19 @@ class RoutingService:
 
     def route_field(self, field: ExtractionFieldResult) -> tuple[str, list[str]]:
         reasons: list[str] = []
+        has_validation_error = any(issue.status == "error" for issue in field.validation_issues)
         if field.value in (None, "", []):
             reasons.append("missing_value")
+            if not field.required and not has_validation_error:
+                reasons.append("optional_field_missing")
+                return "accepted", reasons
+            if field.required:
+                reasons.append("required_field_missing")
+                reasons.append("manual_review_required")
+                return "needs_review", reasons
         if field.value_type != "array" and not field.evidence and field.value not in (None, "", []):
             reasons.append("missing_grounding")
-        if any(issue.status == "error" for issue in field.validation_issues):
+        if has_validation_error:
             reasons.append("validation_error")
 
         if field.confidence >= self.settings.accept_threshold and "validation_error" not in reasons:

@@ -7,6 +7,12 @@ from sqlalchemy.orm import Session
 
 from docustruct_ai.config import Settings
 from docustruct_ai.models import Document, ExtractedEntity, ExtractedField, ReviewDecision, ReviewTask
+from docustruct_ai.utils.normalization import (
+    normalize_currency,
+    normalize_date,
+    normalize_number,
+    normalize_whitespace,
+)
 
 
 class ReviewService:
@@ -34,8 +40,9 @@ class ReviewService:
                 field.routing_state = "accepted"
                 field.confidence = max(field.confidence, self.settings.accept_threshold)
             elif decision == "edit":
-                field.value_text = final_value
-                field.normalized_value = final_value
+                normalized_value = self._normalize_field_value(field, final_value)
+                field.value_text = None if normalized_value is None else str(normalized_value)
+                field.normalized_value = normalized_value
                 field.routing_state = "accepted"
                 field.confidence = max(field.confidence, self.settings.accept_threshold)
             elif decision == "unsupported":
@@ -49,6 +56,9 @@ class ReviewService:
                 payload = dict(entity.payload_json)
                 payload[field.field_name] = field.normalized_value
                 entity.payload_json = payload
+        elif decision == "unsupported":
+            document.routing_state = "rejected"
+            document.status = "reviewed"
 
         db.add(
             ReviewDecision(
@@ -59,11 +69,15 @@ class ReviewService:
                 comment=comment,
             )
         )
+        db.flush()
 
         open_tasks = db.execute(
             select(ReviewTask).where(ReviewTask.document_id == task.document_id).where(ReviewTask.status == "open")
         ).scalars().all()
-        if not open_tasks:
+        if open_tasks:
+            document.routing_state = "needs_review"
+            document.status = "review_pending"
+        else:
             routes = db.execute(
                 select(ExtractedField.routing_state)
                 .join(ExtractedEntity, ExtractedEntity.id == ExtractedField.entity_id)
@@ -82,3 +96,15 @@ class ReviewService:
         db.commit()
         db.refresh(task)
         return task
+
+    def _normalize_field_value(self, field: ExtractedField, final_value: str | None) -> str | float | None:
+        if final_value is None:
+            return None
+        if field.value_type in {"number", "integer"}:
+            return normalize_number(final_value)
+        lowered_name = field.field_name.lower()
+        if "date" in lowered_name:
+            return normalize_date(final_value)
+        if lowered_name == "currency":
+            return normalize_currency(final_value) or normalize_whitespace(final_value)
+        return normalize_whitespace(final_value)

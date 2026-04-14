@@ -11,4 +11,12 @@ __pycache__/
 data/
 run_data/
 test_data/
+ci_data/
+smoke_data/
+tmp_review_storage/
+tmp_review_artifacts/
+ci.db
+smoke.db
+tmp_review_check.db
+alembic_check.db
 examples/generated/

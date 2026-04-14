@@ -70,7 +70,9 @@ class InvoiceExtractor(LineExtractionSupport):
         for pattern in patterns:
             match = re.search(pattern, text, flags=re.IGNORECASE)
             if match:
-                return match.group(1).strip()
+                candidate = self.validate_identifier_candidate(match.group(1))
+                if candidate:
+                    return candidate
         return None
 
     def _extract_line_items(self, lines: list[str]) -> list[InvoiceLineItem]:

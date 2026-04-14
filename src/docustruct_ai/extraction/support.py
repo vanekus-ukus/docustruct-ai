@@ -57,5 +57,16 @@ class LineExtractionSupport:
         for pattern in patterns:
             match = re.search(pattern, text, flags=re.IGNORECASE)
             if match:
-                return normalize_whitespace(match.group(1))
+                candidate = normalize_whitespace(match.group(1))
+                validated = self.validate_identifier_candidate(candidate)
+                if validated:
+                    return validated
         return None
+
+    def validate_identifier_candidate(self, candidate: str | None) -> str | None:
+        if not candidate:
+            return None
+        cleaned = normalize_whitespace(candidate).strip(":")
+        if not re.search(r"\d", cleaned):
+            return None
+        return cleaned
